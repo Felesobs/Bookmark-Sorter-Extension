@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bookmark Auto Sorter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0d0d0f;
+      --surface: #18181c;
+      --surface2: #222228;
+      --border: #2e2e38;
+      --accent: #7c6af7;
+      --accent2: #a78bfa;
+      --green: #4ade80;
+      --orange: #fb923c;
+      --text: #e8e8f0;
+      --muted: #7070880;
+      --muted2: #888898;
+    }
+
+    * {
+      margin: 0; padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      width: 340px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans Thai', sans-serif;
+      font-size: 13px;
+    }
+
+    .header {
+      padding: 16px 18px 14px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(135deg, #13131a 0%, #1a1625 100%);
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .logo {
+      width: 28px; height: 28px;
+      background: linear-gradient(135deg, var(--accent), #c084fc);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      flex-shrink: 0;
+    }
+
+    .title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      color: #fff;
+    }
+
+    .subtitle {
+      font-size: 11px;
+      color: var(--muted2);
+      margin-left: 38px;
+    }
+
+    .body {
+      padding: 14px 18px;
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted2);
+      margin-bottom: 8px;
+    }
+
+    .folder-select-wrap {
+      position: relative;
+      margin-bottom: 14px;
+    }
+
+    .folder-select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted2);
+      pointer-events: none;
+      font-size: 12px;
+    }
+
+    select {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 30px 8px 10px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 12px;
+      appearance: none;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    select:hover { border-color: var(--accent); }
+    select:focus { outline: none; border-color: var(--accent); }
+
+    .sort-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .sort-card {
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .sort-card:hover {
+      border-color: var(--accent);
+      background: var(--surface2);
+    }
+
+    .sort-card.active {
+      border-color: var(--accent);
+      background: rgba(124, 106, 247, 0.1);
+    }
+
+    .sort-card-icon {
+      font-size: 18px;
+      margin-bottom: 5px;
+    }
+
+    .sort-card-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #fff;
+      margin-bottom: 2px;
+    }
+
+    .sort-card-desc {
+      font-size: 10px;
+      color: var(--muted2);
+    }
+
+    .dir-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+
+    .dir-btn {
+      flex: 1;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      color: var(--muted2);
+      padding: 7px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .dir-btn:hover { border-color: var(--accent); color: var(--text); }
+    .dir-btn.active {
+      border-color: var(--accent);
+      background: rgba(124, 106, 247, 0.12);
+      color: var(--accent2);
+    }
+
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 0;
+    }
+
+    .auto-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      margin-bottom: 14px;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .toggle-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .toggle {
+      position: relative;
+      width: 36px;
+      height: 20px;
+    }
+
+    .toggle input { display: none; }
+
+    .toggle-track {
+      position: absolute;
+      inset: 0;
+      background: var(--border);
+      border-radius: 99px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle input:checked + .toggle-track {
+      background: var(--accent);
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      width: 14px; height: 14px;
+      background: #fff;
+      border-radius: 50%;
+      top: 3px; left: 3px;
+      transition: transform 0.2s;
+      pointer-events: none;
+    }
+
+    .toggle input:checked ~ .toggle-thumb {
+      transform: translateX(16px);
+    }
+
+    .auto-desc {
+      font-size: 10px;
+      color: var(--muted2);
+      line-height: 1.5;
+    }
+
+    .btn-sort {
+      width: 100%;
+      background: linear-gradient(135deg, var(--accent), #9f7aea);
+      border: none;
+      color: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .btn-sort:hover { opacity: 0.9; }
+    .btn-sort:active { transform: scale(0.98); }
+    .btn-sort:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .status {
+      margin-top: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      text-align: center;
+      display: none;
+    }
+
+    .status.success {
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.3);
+      color: var(--green);
+      display: block;
+    }
+
+    .status.error {
+      background: rgba(251, 146, 60, 0.1);
+      border: 1px solid rgba(251, 146, 60, 0.3);
+      color: var(--orange);
+      display: block;
+    }
+
+    .status.loading {
+      background: rgba(124, 106, 247, 0.1);
+      border: 1px solid rgba(124, 106, 247, 0.3);
+      color: var(--accent2);
+      display: block;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 10px; height: 10px;
+      border: 2px solid rgba(167, 139, 250, 0.3);
+      border-top-color: var(--accent2);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 4px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .count-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      background: rgba(124, 106, 247, 0.15);
+      color: var(--accent2);
+      padding: 1px 6px;
+      border-radius: 99px;
+      margin-left: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="header-top">
+      <div class="logo">🔖</div>
+      <div class="title">Bookmark Sorter</div>
+    </div>
+    <div class="subtitle">เรียงบุ๊กมาร์กอัตโนมัติสำหรับ Brave</div>
+  </div>
+
+  <div class="body">
+    <!-- Folder -->
+    <div class="section-label">โฟลเดอร์</div>
+    <div class="folder-select-wrap">
+      <select id="folderSelect">
+        <option value="all">📁 ทั้งหมด (รวมทุกโฟลเดอร์)</option>
+      </select>
+    </div>
+
+    <!-- Sort By -->
+    <div class="section-label">เรียงตาม</div>
+    <div class="sort-options">
+      <div class="sort-card active" data-sort="name">
+        <div class="sort-card-icon">🔤</div>
+        <div class="sort-card-label">ชื่อ (A→Z)</div>
+        <div class="sort-card-desc">เรียงตามตัวอักษร</div>
+      </div>
+      <div class="sort-card" data-sort="date">
+        <div class="sort-card-icon">📅</div>
+        <div class="sort-card-label">วันที่เพิ่ม</div>
+        <div class="sort-card-desc">เรียงตามเวลา</div>
+      </div>
+      <div class="sort-card" data-sort="url">
+        <div class="sort-card-icon">🌐</div>
+        <div class="sort-card-label">URL / โดเมน</div>
+        <div class="sort-card-desc">เรียงตาม domain</div>
+      </div>
+      <div class="sort-card" data-sort="folders-first">
+        <div class="sort-card-icon">📂</div>
+        <div class="sort-card-label">โฟลเดอร์ก่อน</div>
+        <div class="sort-card-desc">โฟลเดอร์นำ แล้วตามชื่อ</div>
+      </div>
+    </div>
+
+    <!-- Direction -->
+    <div class="section-label">ทิศทาง</div>
+    <div class="dir-row">
+      <button class="dir-btn active" id="dirAsc">↑ น้อย→มาก / เก่า→ใหม่</button>
+      <button class="dir-btn" id="dirDesc">↓ มาก→น้อย / ใหม่→เก่า</button>
+    </div>
+
+    <!-- Auto Sort -->
+    <div class="auto-section">
+      <div class="toggle-row">
+        <span class="toggle-label">เรียงอัตโนมัติเมื่อเพิ่มบุ๊กมาร์ก</span>
+        <label class="toggle">
+          <input type="checkbox" id="autoSort">
+          <div class="toggle-track"></div>
+          <div class="toggle-thumb"></div>
+        </label>
+      </div>
+      <div class="auto-desc" id="autoDesc">
+        เมื่อเปิดใช้งาน ทุกครั้งที่เพิ่มบุ๊กมาร์กใหม่<br>
+        จะเรียงโฟลเดอร์นั้นใหม่โดยอัตโนมัติ
+      </div>
+    </div>
+
+    <!-- Sort Button -->
+    <button class="btn-sort" id="sortBtn">
+      <span>⚡</span> เรียงเลย
+    </button>
+
+    <div class="status" id="status"></div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
